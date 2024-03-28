@@ -8,14 +8,14 @@ urlpatterns = [
     path('post/<int:pk>/', views.post_detail, name='post_detail'),
     path('create/', views.create_post, name='create_post'),
     
-    
+    # User authentication
     path('register/', views.register, name='register'),
     path('login/', auth_views.LoginView.as_view(), name='login'),
     path('logout/', auth_views.LogoutView.as_view(), name='logout'),
     
-    # User profiles
-    path('profile/edit/', views.edit_profile, name='edit_profile'),
-    path('profile/<str:username>/', views.user_profile, name='user_profile'),
+    # # User profiles
+    # path('profile/edit/', views.edit_profile, name='edit_profile'),
+    # path('profile/<str:username>/', views.user_profile, name='user_profile'),
 
     # AJAX endpoints
     path('like/<int:pk>/', views.like_post, name='like_post'),
