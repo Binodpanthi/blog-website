@@ -46,10 +46,10 @@ class CommentAdmin(admin.ModelAdmin):
     list_filter = ['created_at']
     search_fields = ['content']
 
-# @admin.register(Follow)
-# class FollowAdmin(admin.ModelAdmin):
-#     list_display = ['follower', 'following', 'created_at']
-#     list_filter = ['created_at']
+@admin.register(Follow)
+class FollowAdmin(admin.ModelAdmin):
+    list_display = ['follower', 'following', 'created_at']
+    list_filter = ['created_at']
 
 @admin.register(Bookmark)
 class BookmarkAdmin(admin.ModelAdmin):
