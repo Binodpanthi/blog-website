@@ -125,11 +125,11 @@ def like_post(request, pk):
     
     return JsonResponse({'error': 'Invalid request'}, status=400)
 
-@login_required
-def bookmark_post(request, pk):
-    if request.method == 'POST':
-        post = get_object_or_404(Post, pk=pk)
-        bookmark, created = Bookmark.objects.get_or_create(user=request.user, post=post)
+# @login_required
+# def bookmark_post(request, pk):
+#     if request.method == 'POST':
+#         post = get_object_or_404(Post, pk=pk)
+#         bookmark, created = Bookmark.objects.get_or_create(user=request.user, post=post)
         
         if not created:
             bookmark.delete()
