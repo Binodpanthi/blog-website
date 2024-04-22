@@ -102,19 +102,19 @@ def create_post(request):
     
     return render(request, 'blog/create_post.html', {'form': form})
 
-@login_required
-def like_post(request, pk):
-    if request.method == 'POST':
-        post = get_object_or_404(Post, pk=pk)
-        like, created = Like.objects.get_or_create(user=request.user, post=post)
+# @login_required
+# def like_post(request, pk):
+#     if request.method == 'POST':
+#         post = get_object_or_404(Post, pk=pk)
+#         like, created = Like.objects.get_or_create(user=request.user, post=post)
         
-        if not created:
-            like.delete()
-            liked = False
-        else:
-            liked = True
+#         if not created:
+#             like.delete()
+#             liked = False
+#         else:
+#             liked = True
         
-        # Update like count
+#         # Update like count
         post.likes_count = post.likes.count()
         post.save()
         
