@@ -1,0 +1,232 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ post.title }} - AADIZ BLOZZERS{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'home' %}">Home</a></li>
+            <li class="breadcrumb-item active">{{ post.title|truncatechars:50 }}</li>
+        </ol>
+    </nav>
+    
+    <article class="row">
+        <div class="col-lg-8 mx-auto">
+            <div class="card shadow-sm">
+                <div class="card-body p-4">
+                    <h1 class="display-5 fw-bold mb-4">{{ post.title }}</h1>
+                    
+                    <!-- Author info -->
+                    <div class="d-flex align-items-center mb-4 p-3 bg-light rounded">
+                        {% if post.author.userprofile.avatar %}
+                            <img src="{{ post.author.userprofile.avatar.url }}" alt="{{ post.author.username }}" class="rounded-circle me-3" style="width: 60px; height: 60px; object-fit: cover;">
+                        {% else %}
+                            <div class="bg-primary rounded-circle me-3 d-flex align-items-center justify-content-center text-white" style="width: 60px; height: 60px;">
+                                <span class="fs-4">{{ post.author.username|first|upper }}</span>
+                            </div>
+                        {% endif %}
+                        <div class="flex-grow-1">
+                            <h6 class="mb-1">
+                                <a href="{% url 'user_profile' post.author.username %}" class="text-decoration-none">
+                                    {{ post.author.get_full_name|default:post.author.username }}
+                                </a>
+                            </h6>
+                            <div class="text-muted small">
+                                <i class="bi bi-calendar3 me-1"></i>{{ post.created_at|date:"F d, Y" }}
+                                <i class="bi bi-eye ms-3 me-1"></i>{{ post.views_count }} views
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Post content -->
+                    <div class="mb-4">
+                        <p class="lead">{{ post.excerpt }}</p>
+                        <div class="post-content">
+                            {{ post.content|linebreaks }}
+                        </div>
+                    </div>
+                    
+                    <!-- Tags and Category -->
+                    <div class="mb-4">
+                        {% if post.category %}
+                        <span class="badge rounded-pill me-2" style="background-color: {{ post.category.color }};">
+                            <i class="bi bi-folder me-1"></i>{{ post.category.name }}
+                        </span>
+                        {% endif %}
+                        
+                        {% for tag in post.tags.all %}
+                        <span class="badge bg-secondary rounded-pill me-1">{{ tag.name }}</span>
+                        {% endfor %}
+                    </div>
+                    
+                    <!-- Action buttons -->
+                    <div class="d-flex justify-content-between align-items-center border-top pt-3">
+                        <div>
+                            {% if user.is_authenticated %}
+                            <button class="like-btn btn {% if user_liked %}liked{% endif %}" data-post-id="{{ post.pk }}">
+                                <i class="bi bi-heart{% if user_liked %}-fill{% endif %}"></i>
+                                <span class="likes-count">{{ post.likes_count }}</span> likes
+                            </button>
+                            
+                            <button class="bookmark-btn btn ms-2 {% if user_bookmarked %}bookmarked{% endif %}" data-post-id="{{ post.pk }}">
+                                <i class="bi bi-bookmark{% if user_bookmarked %}-fill{% endif %}"></i>
+                                {% if user_bookmarked %}Bookmarked{% else %}Bookmark{% endif %}
+                            </button>
+                            {% else %}
+                            <span class="text-muted">
+                                <i class="bi bi-heart text-danger"></i> {{ post.likes_count }} likes
+                            </span>
+                            {% endif %}
+                        </div>
+                        
+                        <div>
+                            <button class="btn btn-outline-secondary btn-sm" onclick="sharePost()">
+                                <i class="bi bi-share"></i> Share
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Comments Section -->
+            <div class="card mt-4 shadow-sm">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="bi bi-chat-dots me-2"></i>Comments ({{ post.comments_count }})
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if user.is_authenticated %}
+                    <!-- Comment form -->
+                    <form method="post" class="mb-4">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            {{ comment_form.content }}
+                        </div>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-send me-1"></i>Post Comment
+                        </button>
+                    </form>
+                    {% else %}
+                    <div class="alert alert-info">
+                        <a href="{% url 'login' %}">Login</a> to post a comment.
+                    </div>
+                    {% endif %}
+                    
+                    <!-- Comments list -->
+                    {% for comment in comments %}
+                    <div class="border-bottom pb-3 mb-3">
+                        <div class="d-flex align-items-start">
+                            {% if comment.author.userprofile.avatar %}
+                                <img src="{{ comment.author.userprofile.avatar.url }}" alt="{{ comment.author.username }}" class="rounded-circle me-3 avatar">
+                            {% else %}
+                                <div class="bg-primary rounded-circle me-3 d-flex align-items-center justify-content-center text-white avatar">
+                                    {{ comment.author.username|first|upper }}
+                                </div>
+                            {% endif %}
+                            <div class="flex-grow-1">
+                                <div class="d-flex align-items-center mb-1">
+                                    <strong>{{ comment.author.get_full_name|default:comment.author.username }}</strong>
+                                    <small class="text-muted ms-2">{{ comment.created_at|timesince }} ago</small>
+                                </div>
+                                <p class="mb-0">{{ comment.content|linebreaks }}</p>
+                            </div>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <div class="text-center text-muted py-4">
+                        <i class="bi bi-chat display-4"></i>
+                        <p class="mt-2">No comments yet. Be the first to comment!</p>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </article>
+</div>
+
+<script>
+function sharePost() {
+    if (navigator.share) {
+        navigator.share({
+            title: '{{ post.title }}',
+            text: '{{ post.excerpt }}',
+            url: window.location.href
+        });
+    } else {
+        // Fallback: copy to clipboard
+        navigator.clipboard.writeText(window.location.href).then(() => {
+            alert('Link copied to clipboard!');
+        });
+    }
+}
+</script>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Like functionality
+document.addEventListener('DOMContentLoaded', function() {
+    const likeBtn = document.querySelector('.like-btn');
+    const bookmarkBtn = document.querySelector('.bookmark-btn');
+    
+    if (likeBtn) {
+        likeBtn.addEventListener('click', function() {
+            const postId = this.dataset.postId;
+            
+            fetch(`/like/${postId}/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': csrftoken,
+                    'Content-Type': 'application/json',
+                },
+            })
+            .then(response => response.json())
+            .then(data => {
+                const icon = this.querySelector('i');
+                const countSpan = this.querySelector('.likes-count');
+                
+                if (data.liked) {
+                    this.classList.add('liked');
+                    icon.className = 'bi bi-heart-fill';
+                } else {
+                    this.classList.remove('liked');
+                    icon.className = 'bi bi-heart';
+                }
+                
+                countSpan.textContent = data.likes_count;
+            });
+        });
+    }
+    
+    if (bookmarkBtn) {
+        bookmarkBtn.addEventListener('click', function() {
+            const postId = this.dataset.postId;
+            
+            fetch(`/bookmark/${postId}/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': csrftoken,
+                    'Content-Type': 'application/json',
+                },
+            })
+            .then(response => response.json())
+            .then(data => {
+                const icon = this.querySelector('i');
+                
+                if (data.bookmarked) {
+                    this.classList.add('bookmarked');
+                    icon.className = 'bi bi-bookmark-fill';
+                    this.innerHTML = '<i class="bi bi-bookmark-fill"></i> Bookmarked';
+                } else {
+                    this.classList.remove('bookmarked');
+                    icon.className = 'bi bi-bookmark';
+                    this.innerHTML = '<i class="bi bi-bookmark"></i> Bookmark';
+                }
+            });
+        });
+    }
+});
+</script>
+{% endblock %}

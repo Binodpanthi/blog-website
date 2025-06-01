@@ -1,0 +1,178 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ profile_user.get_full_name|default:profile_user.username }} - AADIZ BLOZZERS{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Profile Header -->
+    <div class="card shadow-sm mb-4">
+        <div class="bg-primary" style="height: 150px;"></div>
+        <div class="card-body position-relative">
+            <div class="row align-items-end" style="margin-top: -75px;">
+                <div class="col-auto">
+                    {% if profile.avatar %}
+                        <img src="{{ profile.avatar.url }}" alt="{{ profile_user.username }}" class="rounded-circle border border-4 border-white avatar-lg">
+                    {% else %}
+                        <div class="bg-primary rounded-circle border border-4 border-white avatar-lg d-flex align-items-center justify-content-center text-white" style="font-size: 2rem;">
+                            {{ profile_user.username|first|upper }}
+                        </div>
+                    {% endif %}
+                </div>
+                
+                <div class="col">
+                    <div class="d-flex justify-content-between align-items-end">
+                        <div>
+                            <h2 class="mb-1">{{ profile_user.get_full_name|default:profile_user.username }}</h2>
+                            {% if profile.location %}
+                            <p class="text-muted mb-2">
+                                <i class="bi bi-geo-alt me-1"></i>{{ profile.location }}
+                            </p>
+                            {% endif %}
+                        </div>
+                        
+                        <div>
+                            {% if user == profile_user %}
+                            <a href="{% url 'edit_profile' %}" class="btn btn-outline-primary">
+                                <i class="bi bi-pencil me-1"></i>Edit Profile
+                            </a>
+                            {% elif user.is_authenticated %}
+                            <button class="btn btn-primary follow-btn" data-username="{{ profile_user.username }}">
+                                {% if is_following %}
+                                    <i class="bi bi-person-check me-1"></i>Following
+                                {% else %}
+                                    <i class="bi bi-person-plus me-1"></i>Follow
+                                {% endif %}
+                            </button>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            {% if profile.bio %}
+            <div class="mt-3">
+                <p class="lead">{{ profile.bio }}</p>
+            </div>
+            {% endif %}
+            
+            <!-- Stats -->
+            <div class="row text-center mt-4">
+                <div class="col-4">
+                    <div class="border-end">
+                        <h4 class="text-primary mb-0">{{ profile.followers_count }}</h4>
+                        <small class="text-muted">Followers</small>
+                    </div>
+                </div>
+                <div class="col-4">
+                    <div class="border-end">
+                        <h4 class="text-primary mb-0">{{ profile.following_count }}</h4>
+                        <small class="text-muted">Following</small>
+                    </div>
+                </div>
+                <div class="col-4">
+                    <h4 class="text-primary mb-0">{{ posts.count }}</h4>
+                    <small class="text-muted">Posts</small>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Posts Section -->
+    <div class="card shadow-sm">
+        <div class="card-header">
+            <h5 class="mb-0">
+                <i class="bi bi-journal-text me-2"></i>Posts ({{ posts.count }})
+            </h5>
+        </div>
+        <div class="card-body">
+            {% if posts %}
+            <div class="row">
+                {% for post in posts %}
+                <div class="col-md-6 mb-4">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <h6 class="card-title">
+                                <a href="{% url 'post_detail' post.pk %}" class="text-decoration-none">
+                                    {{ post.title }}
+                                </a>
+                            </h6>
+                            <p class="card-text text-muted small">{{ post.excerpt|truncatechars:100 }}</p>
+                            
+                            {% if post.category %}
+                            <span class="badge rounded-pill me-1" style="background-color: {{ post.category.color }};">
+                                {{ post.category.name }}
+                            </span>
+                            {% endif %}
+                        </div>
+                        <div class="card-footer bg-white border-0">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <small class="text-muted">
+                                    <i class="bi bi-heart text-danger me-1"></i>{{ post.likes_count }}
+                                    <i class="bi bi-eye ms-2 me-1"></i>{{ post.views_count }}
+                                </small>
+                                <small class="text-muted">{{ post.created_at|date:"M d, Y" }}</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="text-center py-5">
+                <i class="bi bi-journal-x display-4 text-muted"></i>
+                <h5 class="mt-3">No posts yet</h5>
+                <p class="text-muted">
+                    {% if user == profile_user %}
+                        Start by writing your first post!
+                    {% else %}
+                        {{ profile_user.username }} hasn't posted anything yet.
+                    {% endif %}
+                </p>
+                {% if user == profile_user %}
+                <a href="{% url 'create_post' %}" class="btn btn-primary">
+                    <i class="bi bi-plus-circle me-1"></i>Write Your First Post
+                </a>
+                {% endif %}
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Follow functionality
+document.addEventListener('DOMContentLoaded', function() {
+    const followBtn = document.querySelector('.follow-btn');
+    
+    if (followBtn) {
+        followBtn.addEventListener('click', function() {
+            const username = this.dataset.username;
+            
+            fetch(`/follow/${username}/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': csrftoken,
+                    'Content-Type': 'application/json',
+                },
+            })
+            .then(response => response.json())
+            .then(data => {
+                const icon = this.querySelector('i');
+                
+                if (data.following) {
+                    this.innerHTML = '<i class="bi bi-person-check me-1"></i>Following';
+                    this.classList.remove('btn-primary');
+                    this.classList.add('btn-outline-primary');
+                } else {
+                    this.innerHTML = '<i class="bi bi-person-plus me-1"></i>Follow';
+                    this.classList.remove('btn-outline-primary');
+                    this.classList.add('btn-primary');
+                }
+            });
+        });
+    }
+});
+</script>
+{% endblock %}

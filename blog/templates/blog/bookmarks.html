@@ -1,0 +1,79 @@
+{% extends 'base.html' %}
+
+{% block title %}My Bookmarks - AADIZ BLOZZERS{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="d-flex align-items-center mb-4">
+        <h2 class="mb-0">
+            <i class="bi bi-bookmark-fill text-warning me-2"></i>My Bookmarks
+        </h2>
+    </div>
+    
+    {% if bookmarks %}
+    <div class="row">
+        {% for bookmark in bookmarks %}
+        <div class="col-md-6 col-lg-4 mb-4">
+            <div class="card h-100 post-card shadow-sm">
+                <div class="card-header bg-white border-0">
+                    <div class="d-flex align-items-center">
+                        {% if bookmark.post.author.userprofile.avatar %}
+                            <img src="{{ bookmark.post.author.userprofile.avatar.url }}" alt="{{ bookmark.post.author.username }}" class="rounded-circle avatar me-3">
+                        {% else %}
+                            <div class="bg-primary rounded-circle avatar me-3 d-flex align-items-center justify-content-center text-white">
+                                {{ bookmark.post.author.username|first|upper }}
+                            </div>
+                        {% endif %}
+                        <div>
+                            <a href="{% url 'user_profile' bookmark.post.author.username %}" class="text-decoration-none fw-semibold">
+                                {{ bookmark.post.author.get_full_name|default:bookmark.post.author.username }}
+                            </a>
+                            <div class="text-muted small">
+                                <i class="bi bi-calendar3 me-1"></i>{{ bookmark.post.created_at|date:"M d, Y" }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card-body">
+                    <h5 class="card-title">
+                        <a href="{% url 'post_detail' bookmark.post.pk %}" class="text-decoration-none text-dark">
+                            {{ bookmark.post.title }}
+                        </a>
+                    </h5>
+                    <p class="card-text text-muted">{{ bookmark.post.excerpt }}</p>
+                    
+                    {% if bookmark.post.category %}
+                    <span class="badge rounded-pill" style="background-color: {{ bookmark.post.category.color }};">
+                        {{ bookmark.post.category.name }}
+                    </span>
+                    {% endif %}
+                </div>
+                
+                <div class="card-footer bg-white border-0">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div class="text-muted small">
+                            <i class="bi bi-heart text-danger me-1"></i>{{ bookmark.post.likes_count }}
+                            <i class="bi bi-eye ms-3 me-1"></i>{{ bookmark.post.views_count }}
+                        </div>
+                        <small class="text-muted">
+                            Bookmarked {{ bookmark.created_at|timesince }} ago
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="text-center py-5">
+        <i class="bi bi-bookmark display-1 text-muted"></i>
+        <h3 class="mt-3">No bookmarks yet</h3>
+        <p class="text-muted">Start bookmarking posts you want to read later!</p>
+        <a href="{% url 'home' %}" class="btn btn-primary">
+            <i class="bi bi-house me-1"></i>Browse Posts
+        </a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
